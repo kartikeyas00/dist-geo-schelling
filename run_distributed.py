@@ -101,7 +101,8 @@ if __name__ == "__main__":
         shape_file_partition = partition_data(
             shape_file, 
             number_of_partitions=number_of_processes - 1,
-            kind=shape_file_partition
+            kind=shape_file_partition,
+            for_="shape"
         )
         set_shape_file_partition = [
             None
@@ -132,7 +133,8 @@ if __name__ == "__main__":
         agent_houses_populated_partition = partition_data(
             agent_houses_populated_gathered, 
             number_of_partitions=number_of_processes - 1,
-            kind=populated_houses_partition
+            kind=populated_houses_partition,
+            for_="agents"
         )
         set_agent_houses_populated_partition = [
             None

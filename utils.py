@@ -68,7 +68,7 @@ def populate_simulation(
 
     precise_matches['Race'] = None
     precise_matches.loc[occupied, 'Race'] = race.astype(int)
-    return precise_matches
+    return precise_matches[['Race', 'geometry']]
 
 
 

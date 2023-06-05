@@ -47,7 +47,23 @@ def partition_data_by_row_shape(df_shape_file, number_of_partitions):
     return df_shape_file_partitioned
 
 def partition_data_by_row_agents(df_agents, number_of_partitions):
-    pass
+    intervals = np.linspace(
+        df_agents.geometry.bounds.miny.min(),
+        df_agents.geometry.bounds.maxy.max(),
+        number_of_partitions + 1,
+    )
+    dfs = []
+
+
+    for i in range(number_of_partitions):
+        filtered_data = df_agents[(df_agents.geometry.y>=intervals[i]) &
+        (df_agents.geometry.y<intervals[i+1])]
+        filtered_data['partition'] =i+1
+        
+        dfs.append(filtered_data)
+    df_agents_partitioned = pd.concat(dfs)
+    df_agents_partitioned = gp.GeoDataFrame(df_agents_partitioned)
+    return df_agents_partitioned    
 
 
 def partition_data_by_col_shape(df_shape_file, number_of_partitions):
@@ -92,7 +108,23 @@ def partition_data_by_col_shape(df_shape_file, number_of_partitions):
 
 
 def partition_data_by_col_agents(df_agents, number_of_partitions):
-    pass
+    intervals = np.linspace(
+        df_agents.geometry.bounds.minx.min(),
+        df_agents.geometry.bounds.maxx.max(),
+        number_of_partitions + 1,
+    )
+    dfs = []
+
+
+    for i in range(number_of_partitions):
+        filtered_data = df_agents[(df_agents.geometry.x>=intervals[i]) &
+        (df_agents.geometry.x<intervals[i+1])]
+        filtered_data['partition'] =i+1
+        
+        dfs.append(filtered_data)
+    df_agents_partitioned = pd.concat(dfs)
+    df_agents_partitioned = gp.GeoDataFrame(df_agents_partitioned)
+    return df_agents_partitioned    
 
 def partition_data_by_hilbert(df_shape_file, number_of_partitions):
     d_gdf = dask_geopandas.from_geopandas(
