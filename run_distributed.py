@@ -49,9 +49,9 @@ if __name__ == "__main__":
     number_of_iterations = args.number_of_iterations
     shape_file_partition = args.shape_file_partition
     populated_houses_partition = args.populated_houses_partition
-    log_path = f"data/logs/{args.shape_file_partition}/{args.populated_houses_partition}"
-    checkpoint_path = f"data/checkpoint/{args.shape_file_partition}/{args.populated_houses_partition}"
-    plotting_data_storage_path = f"data/plotting/{args.shape_file_partition}/{args.populated_houses_partition}"
+    log_path = f"/home/ksharma2/jobs/results/dist-geo-schelling/all_partitions/logs/{args.shape_file_partition}/{args.populated_houses_partition}"
+    checkpoint_path = f"/home/ksharma2/jobs/results/dist-geo-schelling/all_partitions/checkpoint/{args.shape_file_partition}/{args.populated_houses_partition}"
+    plotting_data_storage_path = f"/home/ksharma2/jobs/results/dist-geo-schelling/all_partitions/plotting/{args.shape_file_partition}/{args.populated_houses_partition}"
     ###########################################################################
 
     ###########################################################################
@@ -176,7 +176,7 @@ if __name__ == "__main__":
         gathered_all_houses = comm.gather(get_houses, root=0)
         logger.info(f"Rank {rank}: Unsatisfied agents, empty houses and all houses gathered.")
         
-        # Savinf unsatisfied_agents, empty_houses, all_houses data for checkpointing
+        # Saving unsatisfied_agents, empty_houses, all_houses data for checkpointing
         # purposes
         
         if rank == 0:

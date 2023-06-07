@@ -1,9 +1,10 @@
 import os
 import itertools
+from subprocess import Popen, PIPE
 
-log_directory = "C:/Users/karti/Documents/College/University Of Oregon/Classes/CS 630 Distributed Systems/project/distributed-geographic-schellings-model/simulation/data/logs"
-checkpoint_directory = "C:/Users/karti/Documents/College/University Of Oregon/Classes/CS 630 Distributed Systems/project/distributed-geographic-schellings-model/simulation/data/checkpoint"
-plot_directory = "C:/Users/karti/Documents/College/University Of Oregon/Classes/CS 630 Distributed Systems/project/distributed-geographic-schellings-model/simulation/data/plotting"
+log_directory = "/home/ksharma2/jobs/results/dist-geo-schelling/all_partitions/logs"
+checkpoint_directory = "/home/ksharma2/jobs/results/dist-geo-schelling/all_partitions/checkpoint"
+plot_directory = "/home/ksharma2/jobs/results/dist-geo-schelling/all_partitions/plotting"
 
 partitions = [
     "row",
@@ -47,15 +48,15 @@ partition_combinations = list(itertools.product(partitions,repeat=2))
 ###############################################################################
 ## Various Pre Defined Settings
 ###############################################################################
-python_file = "C:/Users/karti/Documents/College/University Of Oregon/Classes/CS 630 Distributed Systems/project/distributed-geographic-schellings-model/simulation/run_distributed.py"
-shapefile = "shapefiles/CA/CA.shp"
-spacing = 0.4
+python_file = "/home/ksharma2/dist-geo-schelling/run_distributed.py"
+shapefile = "/home/ksharma2/dist-geo-schelling/shapefiles/CA/CA.shp"
+spacing = 0.1
 empty_ratio = 0.1
-demography_ratio = 0.5
-similarity_threshold = 0.3
+demography_ratio = 0.71 # According to 2022 california census there are 71.1% of whites in the state
+similarity_threshold = 0.4 # I just made it up
 number_of_processes = 8
-number_of_iterations = 10
-python_path = "C:/Users/karti/Anaconda3/envs/dist-geo-schelling/python.exe"
+number_of_iterations = 100
+python_path = "python"
 ###############################################################################
 
 
@@ -63,7 +64,7 @@ python_path = "C:/Users/karti/Anaconda3/envs/dist-geo-schelling/python.exe"
 for partition in partition_combinations:
 
     command = f"""
-                mpiexec -n 8\
+                mpiexec -n {number_of_processes}\
                 "{python_path}" "{python_file}"\
                 --shapefilepath "{shapefile}"\
                 --spacing {spacing}\
@@ -76,6 +77,15 @@ for partition in partition_combinations:
                 --populated_houses_partition "{partition[1]}"
             """    
 
-              
-    os.system(command)
+    process = Popen(command, shell=True,stdout=PIPE, stderr=PIPE)
+    #process.wait()
+    stdout, stderr = process.communicate()
+    
+    print("Command output:")
+    print(stdout.decode())
+    
+    if stderr:
+        print("Command error:")
+        print(stderr.decode())          
+    #os.system(command)
     

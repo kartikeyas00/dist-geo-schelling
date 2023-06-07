@@ -4,7 +4,6 @@ import pandas as pd
 import dask_geopandas
 from shapely.ops import unary_union, split
 from shapely.geometry import LineString, Point
-from matplotlib import pyplot as plt
 
 def partition_data_by_row_shape(df_shape_file, number_of_partitions):
     intervals = np.linspace(
