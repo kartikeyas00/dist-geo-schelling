@@ -103,7 +103,7 @@ def split_arrays(array, number_of_partitions):
     return [None] + split_arrays
 
 
-def move(unsatisfied_agents, empty_houses, number_of_partitions=4):
+def move_distributed(unsatisfied_agents, empty_houses, number_of_partitions=4):
     satisfied_agents = []
 
     concatenated_empty_house = np.concatenate(
@@ -157,4 +157,46 @@ def move(unsatisfied_agents, empty_houses, number_of_partitions=4):
     print(f"Satisifed Agents inside the move after ---> {len(satisfied_agents)}")
     print(f"Empty Houses inside the move after---> {len(concatenated_empty_house)}")
 
-    return split_arrays(satisfied_agents, number_of_partitions), split_arrays(concatenated_empty_house, number_of_partitions)
+    return (split_arrays(satisfied_agents, number_of_partitions), split_arrays(concatenated_empty_house, number_of_partitions) 
+            if number_of_partitions > 1 
+            else satisfied_agents, concatenated_empty_house)
+
+
+def move_centralized(unsatisfied_agents, empty_houses):
+    satisfied_agents = []
+
+    
+    print(
+        f"Unsatisified Agents inside the move before ---> {len(unsatisfied_agents)}"
+    )
+    print(f"Empty Houses inside the move before---> {len(empty_houses)}")
+
+    for i in range(len(unsatisfied_agents)):
+        race, x, y = unsatisfied_agents[i]
+        random_index = np.random.choice(empty_houses.shape[0], 1)[0]
+        (_, x_new, y_new) = empty_houses[
+           random_index
+        ]
+        # remove from the empty houses because it is taken
+        '''
+        empty_houses = empty_houses[
+            ~np.isclose(
+                empty_houses[:, 1:3],
+                np.array([x_new, y_new]),
+            ).all(axis=1)
+        ]
+        '''
+        #mask = ~(np.isclose(empty_houses[:, 1], x_new, rtol=1e-05, atol=1e-08, equal_nan=False) & np.isclose(empty_houses[:, 2], y_new, rtol=1e-05, atol=1e-08, equal_nan=False))
+        empty_houses = np.delete(empty_houses, random_index,axis=0)
+        # add to the empty house as the agent house is empty because the agent
+        # has chosen a new house
+        empty_houses = np.vstack(
+            [empty_houses, [np.nan, x, y]]
+        )
+
+        satisfied_agents.append([race, x_new, y_new,])
+    satisfied_agents = np.array(satisfied_agents, dtype=float)
+    print(f"Satisifed Agents inside the move after ---> {len(satisfied_agents)}")
+    print(f"Empty Houses inside the move after---> {len(empty_houses)}")
+
+    return satisfied_agents, empty_houses
