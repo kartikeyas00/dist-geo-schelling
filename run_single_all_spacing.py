@@ -5,7 +5,18 @@ log_directory = "/home/ksharma2/jobs/results/dist-geo-schelling/single/logs"
 checkpoint_directory = "/home/ksharma2/jobs/results/dist-geo-schelling/single/checkpoint"
 plot_directory = "/home/ksharma2/jobs/results/dist-geo-schelling/single/plotting"
 
-spacings = [0.1, 0.09, 0.08]
+spacings = [
+    #0.1, 
+    #0.09, 
+    #0.08, 
+    #0.07, 
+    #0.06, 
+    #0.05,
+    #0.04, 
+    #0.03, 
+    #0.02, 
+    0.01
+    ]
 
 ### Do some directory manipulation work
 

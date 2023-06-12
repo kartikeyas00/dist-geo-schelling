@@ -13,6 +13,7 @@ class Simulation:
         self.spacing = spacing
         self.geometry = None
         self.unsatisfied_agents = None
+        self.unsatisfied_agents_index = []
 
     def configure(self, empty_houses=None, satisfied_agents=None):
         self.geometry = list(
@@ -66,6 +67,7 @@ class Simulation:
         self, index, all_neighbours, race_list, agent_houses
     ):
         if self.is_unsatisfied(index, all_neighbours, race_list):
+            self.unsatisfied_agents_index.append(index)
             self.unsatisfied_agents = np.append(
                 self.unsatisfied_agents,
                 [[race_list[index], agent_houses[index][0], agent_houses[index][1]]],
@@ -92,6 +94,7 @@ class Simulation:
             all_neighbours[j].append(i)
         changes = 0
         self.unsatisfied_agents = np.empty((0, 3))
+        self.unsatisfied_agents_index = []
         for index in np.arange(len(old_houses)):
             changes += self.populate_unsatisfied_agents(
                 index,
@@ -121,11 +124,16 @@ class Simulation:
         print(f"Number of houses before --> {len(self.houses)}")
         empty_houses = self.houses[np.isnan(self.houses[:, 0])]
         old_houses = self.houses.copy()
+        
+        
+        #np.save("/home/ksharma2/dist-geo-schelling/houses",self.houses)
+        #np.save("/home/ksharma2/dist-geo-schelling/unsatisfied_agents",self.unsatisfied_agents)
+        self.houses = np.delete(self.houses,self.unsatisfied_agents_index,axis=0)
         self.houses = self.houses[~np.isnan(self.houses[:, 0])]
         print(f"Number of houses after --> {len(self.houses)}")
-        self.houses = self.houses[
-            ~np.all(self.houses == self.unsatisfied_agents[:, None], axis=2).any(axis=0)
-        ]
+        #self.houses = self.houses[
+        #    ~np.all(self.houses == self.unsatisfied_agents[:, None], axis=2).any(axis=0)
+        #]
 
         # self.houses = self.houses[~np.isin(self.houses, self.unsatisfied_agents).all(axis=1)]
 

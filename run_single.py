@@ -3,6 +3,7 @@ import time
 from simulation import Simulation
 from utils import load_shape_file, populate_simulation, move_centralized
 import numpy as np
+import pandas as pd
 import json
 import argparse
 
@@ -67,13 +68,15 @@ if __name__ == "__main__":
 
     # Scatter shape file partitions data to the workers(all nodes other than 0) from parent node 0
 
-    
+    start_time_agent_houses_population = time.time()
     agent_houses_populated = populate_simulation(
         shape_file, spacing, empty_ratio, demographic_ratio
     )
-        
+    end_time_agent_houses_population = time.time()
+    total_time_agent_houses_population = end_time_agent_houses_population - start_time_agent_houses_population
     logger.info("Central: Populate Simulation.")
-    
+    logger.info(f"Central: Number of agents in Simulation ---> {len(agent_houses_populated[~pd.isna(agent_houses_populated.Race)])}")
+    logger.info(f"Central: Total Time taken for populating agents ---> {total_time_agent_houses_population}")
     # Initialize the simulation on parent node 0
     
     sim = Simulation(
@@ -121,8 +124,8 @@ if __name__ == "__main__":
                 empty_houses,
             )
         logger.info("Central: Agents moved.")
-        if houses is not None:
-            history_all_houses.append(houses.tolist())
+        #if houses is not None:
+            #history_all_houses.append(houses.tolist())
          
         # Scatter satisfied and empty agents data to all workers from the parent node
        
@@ -132,8 +135,8 @@ if __name__ == "__main__":
     
     # Save plotting data
     
-    out_file = open(f"{plotting_data_storage_path}/history_gathered_all_houses.json", "w")
-    json.dump(history_all_houses, out_file)
+    #out_file = open(f"{plotting_data_storage_path}/history_gathered_all_houses.json", "w")
+    #json.dump(history_all_houses, out_file)
     
     end_time = time.time()  # End time of the program
     
