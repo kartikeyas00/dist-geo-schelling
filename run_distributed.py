@@ -2,7 +2,7 @@ import logging
 import time
 from mpi4py import MPI
 from simulation import Simulation
-from utils import load_shape_file, populate_simulation, move
+from utils import load_shape_file, populate_simulation, move_distributed
 from partition import partition_data
 import numpy as np
 import pandas as pd
@@ -20,6 +20,8 @@ parser.add_argument('--number_of_processes', default=8, type=int, help='Number o
 parser.add_argument('--number_of_iterations', default=10, type=int, help='Number of iterations for the simulation.')
 parser.add_argument('--shape_file_partition', default="hilbert", type=str, help='Type of shape file partition for the simulation.')
 parser.add_argument('--populated_houses_partition', default="hilbert", type=str, help='Type of populated houses partition for the simulation.')
+parser.add_argument('--data_path', default="~", type=str, help='Path where the data needs to be stored.')
+
 
 if __name__ == "__main__":
     start_time = time.time()  # Start time of the program
@@ -27,14 +29,8 @@ if __name__ == "__main__":
 
     initialized = MPI.Is_initialized()
     
-
-    
     
     args = parser.parse_args()
-
-        
-        
-    
 
 
     ###########################################################################
@@ -49,9 +45,10 @@ if __name__ == "__main__":
     number_of_iterations = args.number_of_iterations
     shape_file_partition = args.shape_file_partition
     populated_houses_partition = args.populated_houses_partition
-    log_path = f"/home/ksharma2/jobs/results/dist-geo-schelling/all_partitions/logs/{args.shape_file_partition}/{args.populated_houses_partition}"
-    checkpoint_path = f"/home/ksharma2/jobs/results/dist-geo-schelling/all_partitions/checkpoint/{args.shape_file_partition}/{args.populated_houses_partition}"
-    plotting_data_storage_path = f"/home/ksharma2/jobs/results/dist-geo-schelling/all_partitions/plotting/{args.shape_file_partition}/{args.populated_houses_partition}"
+    data_path = args.data_path
+    log_path = f"{data_path}/logs/{args.shape_file_partition}/{args.populated_houses_partition}"
+    checkpoint_path = f"{data_path}/checkpoint/{args.shape_file_partition}/{args.populated_houses_partition}"
+    plotting_data_storage_path = f"{data_path}/plotting/{args.shape_file_partition}/{args.populated_houses_partition}"
     ###########################################################################
 
     ###########################################################################
@@ -59,7 +56,6 @@ if __name__ == "__main__":
     if not initialized:
         MPI.Init()
         
-
 
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
@@ -95,6 +91,7 @@ if __name__ == "__main__":
     
 
     # Load shape file and partition data on parent node 0
+    start_time_agent_houses_population = time.time()
     if rank == 0:
         logging.info(f"Rank {rank}: Loading shape file and partitioning data.")
         shape_file = load_shape_file(shapefilepath)
@@ -111,11 +108,12 @@ if __name__ == "__main__":
             for i in range(number_of_processes)
         ]
         geometry = shape_file.geometry.apply(lambda x: np.array(x.exterior.coords[:-1]))
-
+        
+    
     # Scatter shape file partitions data to the workers(all nodes other than 0) from parent node 0
     shape_file_partition_scattered = comm.scatter(set_shape_file_partition, root=0)
     logger.info(f"Rank {rank}: Shape file partition scattered.")
-
+    
     if rank != 0:
         get_agent_houses_populated = populate_simulation(
             shape_file_partition_scattered, spacing, empty_ratio, demographic_ratio
@@ -123,6 +121,9 @@ if __name__ == "__main__":
         
     #Gather all populated partitions on parent node 0
     agent_houses_populated_gathered = comm.gather(get_agent_houses_populated, root=0)
+    end_time_agent_houses_population = time.time()
+    total_time_agent_houses_population = end_time_agent_houses_population - start_time_agent_houses_population
+    logger.info(f"Rank {rank}: Total Time taken for populating agents ---> {total_time_agent_houses_population}")
     logger.info(f"Rank {rank}: Shape file partition gathered.")
     
     # Partition populated agent data on parent node 0
@@ -130,6 +131,7 @@ if __name__ == "__main__":
         logger.info(f"Rank {rank}: Partitioning agent house populated data.")
         agent_houses_populated_gathered = pd.concat(
             [i for i in agent_houses_populated_gathered if i is not None])
+        logger.info(f"Rank {rank}: Number of agents in Simulation ---> {len(agent_houses_populated_gathered[~pd.isna(agent_houses_populated_gathered.Race)])}")
         agent_houses_populated_partition = partition_data(
             agent_houses_populated_gathered, 
             number_of_partitions=number_of_processes - 1,
@@ -155,9 +157,9 @@ if __name__ == "__main__":
         
     for i in range(number_of_iterations):
         logger.info(f"Rank {rank}: Starting iteration {i}")
-
+        iteration_start_time = time.time()
         if rank != 0:
-            iteration_start_time = time.time()
+            
             
             # Configure the simulation with empty houses and satisified agents
             sim.configure(set_empty_houses, set_satisfied_agents)
@@ -202,7 +204,7 @@ if __name__ == "__main__":
             gathered_all_houses = np.concatenate(
                 [arr for arr in gathered_all_houses if arr is not None]
             )
-            set_new_satisifed_agents, set_new_empty_houses = move(
+            set_new_satisifed_agents, set_new_empty_houses = move_distributed(
                 gathered_unsatisfied_agents,
                 gathered_empty_houses,
                 number_of_processes - 1,
@@ -215,10 +217,10 @@ if __name__ == "__main__":
         set_satisfied_agents = comm.scatter(set_new_satisifed_agents, root=0)
         set_empty_houses = comm.scatter(set_new_empty_houses, root=0)
         logger.info(f"Rank {rank}: Unsatisfied agents and empty houses scattered.")
-        if rank !=0:
-            iteration_end_time = time.time()
-            total_iteration_time = iteration_end_time - iteration_start_time
-            logger.info(f"Rank {rank}: Total Iteration time: {total_iteration_time} seconds.")
+        #if rank !=0:
+        iteration_end_time = time.time()
+        total_iteration_time = iteration_end_time - iteration_start_time
+        logger.info(f"Rank {rank}: Total Iteration time: {total_iteration_time} seconds.")
     
     # Save plotting data
     if rank == 0:

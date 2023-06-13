@@ -157,9 +157,8 @@ def move_distributed(unsatisfied_agents, empty_houses, number_of_partitions=4):
     print(f"Satisifed Agents inside the move after ---> {len(satisfied_agents)}")
     print(f"Empty Houses inside the move after---> {len(concatenated_empty_house)}")
 
-    return (split_arrays(satisfied_agents, number_of_partitions), split_arrays(concatenated_empty_house, number_of_partitions) 
-            if number_of_partitions > 1 
-            else satisfied_agents, concatenated_empty_house)
+    return split_arrays(satisfied_agents, number_of_partitions), split_arrays(concatenated_empty_house, number_of_partitions)
+            
 
 
 def move_centralized(unsatisfied_agents, empty_houses):
