@@ -129,9 +129,12 @@ if __name__ == "__main__":
     # Partition populated agent data on parent node 0
     if rank ==0 :
         logger.info(f"Rank {rank}: Partitioning agent house populated data.")
+        
         agent_houses_populated_gathered = pd.concat(
             [i for i in agent_houses_populated_gathered if i is not None])
         logger.info(f"Rank {rank}: Number of agents in Simulation ---> {len(agent_houses_populated_gathered[~pd.isna(agent_houses_populated_gathered.Race)])}")
+        agent_houses_populated_gathered.to_parquet("gathered_agents.parquet")
+    
         agent_houses_populated_partition = partition_data(
             agent_houses_populated_gathered, 
             number_of_partitions=number_of_processes - 1,

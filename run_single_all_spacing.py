@@ -1,21 +1,34 @@
 import os
 from subprocess import Popen, PIPE
+import yaml
 
-log_directory = "/home/ksharma2/jobs/results/dist-geo-schelling/single/logs"
-checkpoint_directory = "/home/ksharma2/jobs/results/dist-geo-schelling/single/checkpoint"
-plot_directory = "/home/ksharma2/jobs/results/dist-geo-schelling/single/plotting"
+
+###############################################################################
+## Various Pre Defined Settings
+###############################################################################
+with open("configs/config_single_all_spacings.yml") as f:
+    config = yaml.safe_load(f)
+    python_file = config["python_file"]#"/home/ksharma2/dist-geo-schelling/run_single.py"
+    shapefile = config["shapefile"]#"/home/ksharma2/dist-geo-schelling/shapefiles/CA/CA.shp"
+    data_path = config["data_path"]#"/home/ksharma2/jobs/results/dist-geo-schelling/single/"
+    empty_ratio = config["empty_ratio"] #0.1
+    demography_ratio = config["demography_ratio"] #0.71 # According to 2022 california census there are 71.1% of whites in the state
+    similarity_threshold = config["similarity_threshold"]#0.4 # I just made it up
+    number_of_iterations = config["number_of_iterations"]#100
+    python_path = config["python_path"] #"python"
+###############################################################################
 
 spacings = [
     #0.1, 
     #0.09, 
     #0.08, 
-    #0.07, 
+    0.07, 
     #0.06, 
     #0.05,
     #0.04, 
     #0.03, 
     #0.02, 
-    0.01
+    #0.01
     ]
 
 ### Do some directory manipulation work
@@ -36,26 +49,14 @@ def create_directory(directory_path, delete=False):
         clear_directory(directory_path)
         
 for spacing in spacings:
-    create_directory(f"{log_directory}/{spacing}", delete=True)
-    create_directory(f"{checkpoint_directory}/{spacing}", delete=True)
-    create_directory(f"{plot_directory}/{spacing}", delete=True)
+    create_directory(f"{data_path}/logs/{spacing}", delete=True)
+    create_directory(f"{data_path}/checkpoint/{spacing}", delete=True)
+    create_directory(f"{data_path}/plotting/{spacing}", delete=True)
 
 
 
 
-###############################################################################
-## Various Pre Defined Settings
-###############################################################################
-python_file = "/home/ksharma2/dist-geo-schelling/run_single.py"
-shapefile = "/home/ksharma2/dist-geo-schelling/shapefiles/CA/CA.shp"
-data_path = "/home/ksharma2/jobs/results/dist-geo-schelling/single/"
-#spacing = 0.1
-empty_ratio = 0.1
-demography_ratio = 0.71 # According to 2022 california census there are 71.1% of whites in the state
-similarity_threshold = 0.4 # I just made it up
-number_of_iterations = 100
-python_path = "python"
-###############################################################################
+
 
 
 for spacing in spacings:
@@ -71,10 +72,10 @@ for spacing in spacings:
                 --data_path "{data_path}"
             """    
 
-
+    
     process = Popen(command, shell=True,stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate()
-
+    
     print("Command output:")
     print(stdout.decode())
 

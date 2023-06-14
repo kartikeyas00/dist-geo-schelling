@@ -5,6 +5,7 @@ from shapely.geometry import Point
 import dask_geopandas
 from geopandas.tools import sjoin
 from shapely.ops import unary_union
+from shapely.prepared import prep
 
 
 
@@ -23,8 +24,11 @@ def generate_points(polygon, spacing):
     x_coords = np.arange(np.floor(minx), np.ceil(maxx), spacing)
     y_coords = np.arange(np.floor(miny), np.ceil(maxy), spacing)
     grid_x, grid_y = np.meshgrid(x_coords, y_coords)
-    points = np.dstack([grid_x.ravel(), grid_y.ravel()]).reshape(-1, 2)
-    return [Point(x, y) for x, y in points]
+    points = np.column_stack([grid_x.ravel(), grid_y.ravel()])
+    prepared_polygon = prep(polygon)
+    mask = np.array([prepared_polygon.intersects(Point(x, y)) for x, y in points])
+    points_within_polygon = [Point(x, y) for x, y in points[mask]]
+    return points_within_polygon
 
 
 def random_population(size, ratio):
@@ -47,49 +51,16 @@ def populate_simulation(
     all_points = []
     for polygon in shape_file.geometry:
         all_points.extend(generate_points(polygon, spacing))
-        
-    all_houses = gp.GeoDataFrame({'geometry': all_points}, geometry='geometry')
-    # create spatial index
-    sindex = shape_file.sindex
     
-    # find the points that intersect with the polygons
-    possible_matches_index = list(sindex.intersection(unary_union(all_houses['geometry']).bounds))
-    possible_matches = shape_file.iloc[possible_matches_index]
-    # Reproject crs of all houses
-    all_houses.crs =possible_matches.crs
+    data = [{'geometry': point, 'Race': None} for point in all_points]
 
-    precise_matches = sjoin(all_houses, possible_matches, how='inner', predicate='intersects')
-    
-    # create the mask before hand
-    occupied = random_population(size=len(precise_matches), ratio=1 - empty_ratio)
+    all_houses = gp.GeoDataFrame(data, geometry='geometry')
+    occupied = random_population(size=len(all_houses), ratio=1 - empty_ratio)
     # calculate the sum once and use it later
     total_occupied = int(occupied.sum())
     race = random_population(size=total_occupied, ratio=1 - demographic_ratio)
-
-    precise_matches['Race'] = None
-    precise_matches.loc[occupied, 'Race'] = race.astype(int)
-    return precise_matches[['Race', 'geometry']]
-
-
-
-
-"""
-def partition_data_by_hilbert(agent_houses_df, number_of_partitions):
-    d_gdf = dask_geopandas.from_geopandas(
-        agent_houses_df, npartitions=number_of_partitions
-    )
-    d_gdf = d_gdf.spatial_shuffle(by="hilbert")
-    agent_houses_partitioned = gp.GeoDataFrame(
-        columns=["Race", "geometry", "partition"]
-    )
-    for i in range(number_of_partitions):
-        d_gdf_temp = d_gdf.partitions[i].compute().reset_index(drop=True)
-        d_gdf_temp["partition"] = i + 1
-        agent_houses_partitioned = pd.concat([agent_houses_partitioned, d_gdf_temp])
-    return agent_houses_partitioned
-"""
-
-
+    all_houses.loc[occupied, 'Race'] = race.astype(int)
+    return all_houses[['Race', 'geometry']]
 
 
 def split_arrays(array, number_of_partitions):
@@ -133,19 +104,24 @@ def move_distributed(unsatisfied_agents, empty_houses, number_of_partitions=4):
 
     for i in range(len(concatenated_unsatisfied_agents)):
         race, x, y, machine_key_ua = concatenated_unsatisfied_agents[i]
-
+        random_index = np.random.choice(concatenated_empty_house.shape[0], 1)[0]
+        """
         (_, x_new, y_new, machine_key_eh) = concatenated_empty_house[
             np.random.choice(concatenated_empty_house.shape[0], 1),
             :,
         ][0]
-
+        """
+        (_, x_new, y_new, machine_key_eh) = concatenated_empty_house[random_index]
         # remove from the empty houses because it is taken
+        """
         concatenated_empty_house = concatenated_empty_house[
             ~np.isclose(
                 concatenated_empty_house[:, 1:4],
                 np.array([x_new, y_new, machine_key_eh]),
             ).all(axis=1)
         ]
+        """
+        concatenated_empty_house = np.delete(concatenated_empty_house,random_index,axis=0)
         # add to the empty house as the agent house is empty because the agent
         # has chosen a new house
         concatenated_empty_house = np.vstack(
@@ -176,16 +152,7 @@ def move_centralized(unsatisfied_agents, empty_houses):
         (_, x_new, y_new) = empty_houses[
            random_index
         ]
-        # remove from the empty houses because it is taken
-        '''
-        empty_houses = empty_houses[
-            ~np.isclose(
-                empty_houses[:, 1:3],
-                np.array([x_new, y_new]),
-            ).all(axis=1)
-        ]
-        '''
-        #mask = ~(np.isclose(empty_houses[:, 1], x_new, rtol=1e-05, atol=1e-08, equal_nan=False) & np.isclose(empty_houses[:, 2], y_new, rtol=1e-05, atol=1e-08, equal_nan=False))
+        
         empty_houses = np.delete(empty_houses, random_index,axis=0)
         # add to the empty house as the agent house is empty because the agent
         # has chosen a new house

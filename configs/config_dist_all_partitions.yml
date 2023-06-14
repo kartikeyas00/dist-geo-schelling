@@ -1,0 +1,10 @@
+python_file: "C:/Users/karti/Documents/College/University Of Oregon/Classes/CS 630 Distributed Systems/project/distributed-geographic-schellings-model/simulation/run_distributed.py"
+shapefile: "C:/Users/karti/Documents/College/University Of Oregon/Classes/CS 630 Distributed Systems/project/distributed-geographic-schellings-model/simulation/shapefiles/CA/CA.shp"
+data_path: "C:/Users/karti/Documents/College/University Of Oregon/Classes/CS 630 Distributed Systems/project/distributed-geographic-schellings-model/simulation/data/dist"
+empty_ratio: 0.1
+demography_ratio: 0.71
+similarity_threshold: 0.4
+number_of_iterations: 100
+python_path: python
+number_of_processes: 8
+spacing: 0.07
