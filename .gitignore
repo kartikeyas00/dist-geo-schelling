@@ -3,3 +3,4 @@ test/
 __pycache__/
 plot.py
 run_single_test.py
+configs/
