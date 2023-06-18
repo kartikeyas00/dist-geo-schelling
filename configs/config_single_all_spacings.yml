@@ -1,8 +1,8 @@
-python_file: "C:/Users/karti/Documents/College/University Of Oregon/Classes/CS 630 Distributed Systems/project/distributed-geographic-schellings-model/simulation/run_single.py"
-shapefile: "C:/Users/karti/Documents/College/University Of Oregon/Classes/CS 630 Distributed Systems/project/distributed-geographic-schellings-model/simulation/shapefiles/CA/CA.shp"
-data_path: "C:/Users/karti/Documents/College/University Of Oregon/Classes/CS 630 Distributed Systems/project/distributed-geographic-schellings-model/simulation/data/single"
+python_file: "/home/ksharma2/dist-geo-schelling/run_single.py"
+shapefile: "/home/ksharma2/dist-geo-schelling/shapefiles/CA/CA.shp"
+data_path: "/home/ksharma2/jobs/results/dist-geo-schelling/single/"
 empty_ratio: 0.1
 demography_ratio: 0.71
 similarity_threshold: 0.4
-number_of_iterations: 100
+number_of_iterations: 50
 python_path: python

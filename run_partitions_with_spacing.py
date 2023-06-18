@@ -1,4 +1,5 @@
 import os
+import itertools
 from subprocess import Popen, PIPE
 import yaml
 
@@ -6,17 +7,32 @@ import yaml
 ###############################################################################
 ## Various Pre Defined Settings
 ###############################################################################
-with open("/home/ksharma2/dist-geo-schelling/configs/config_single_all_spacings.yml") as f:
+with open("/home/ksharma2/dist-geo-schelling/configs/config_dist_partitions_with_spacing.yml") as f:
     config = yaml.safe_load(f)
     python_file = config["python_file"]
     shapefile = config["shapefile"]
     data_path = config["data_path"]
     empty_ratio = config["empty_ratio"] 
-    demography_ratio = config["demography_ratio"]  # According to 2022 california census there are 71.1% of whites in the state
-    similarity_threshold = config["similarity_threshold"]# I just made it up
+    demography_ratio = config["demography_ratio"] # According to 2022 california census there are 71.1% of whites in the state
+    similarity_threshold = config["similarity_threshold"] # I just made it up
     number_of_iterations = config["number_of_iterations"]
     python_path = config["python_path"] 
+    number_of_processes = config["number_of_processes"]
+    #spacing = config["spacing"]
 ###############################################################################
+
+partitions = [
+    #["morton","row"], #done
+    #["geohash","row"],#done
+    #["geohash","geohash"],#done
+    #["geohash","hilbert"],#done
+    ["hilbert", "morton"],
+    ["hilbert", "geohash"],
+    ["geohash", "morton"],
+    ["col", "row"],
+    ["col", "geohash"],
+    ["col", "morton"],
+    ]
 
 spacings = [
     0.1, 
@@ -54,37 +70,46 @@ def create_directory(directory_path, delete=False):
     elif os.path.exists(directory_path) and delete:
         clear_directory(directory_path)
         
-for spacing in spacings:
-    create_directory(f"{data_path}/logs/{spacing}", delete=True)
-    create_directory(f"{data_path}/checkpoint/{spacing}", delete=True)
-    create_directory(f"{data_path}/plotting/{spacing}", delete=True)
+        
+for partition in partitions:
+    create_directory(f"{data_path}/logs/{partition[0]}", delete=False)
+    create_directory(f"{data_path}/checkpoint/{partition[0]}", delete=False)
+    create_directory(f"{data_path}/plotting/{partition[0]}", delete=False)
+    create_directory(f"{data_path}/logs/{partition[0]}/{partition[1]}", delete=False)
+    create_directory(f"{data_path}/checkpoint/{partition[0]}/{partition[1]}", delete=False)
+    create_directory(f"{data_path}/plotting/{partition[0]}/{partition[1]}", delete=False)
+    for spacing in spacings:
+        create_directory(f"{data_path}/logs/{partition[0]}/{partition[1]}/{spacing}", delete=True)
+        create_directory(f"{data_path}/checkpoint/{partition[0]}/{partition[1]}/{spacing}", delete=True)
+        create_directory(f"{data_path}/plotting/{partition[0]}/{partition[1]}/{spacing}", delete=True)
 
+combinations = list(itertools.product(partitions, spacings))
+combinations = [list(partition) + [spacing] for partition, spacing in combinations]
 
-
-
-
-
-
-for spacing in spacings:
+for comb in combinations:
 
     command = f"""
+                mpiexec -n {number_of_processes}\
                 "{python_path}" "{python_file}"\
                 --shapefilepath "{shapefile}"\
-                --spacing {spacing}\
+                --spacing {comb[2]}\
                 --empty_ratio {empty_ratio}\
                 --demographic_ratio {demography_ratio} \
                 --similarity_threshold {similarity_threshold}\
+                --number_of_processes {number_of_processes} \
                 --number_of_iterations {number_of_iterations} \
+                --shape_file_partition "{comb[0]}" \
+                --populated_houses_partition "{comb[1]}"\
                 --data_path "{data_path}"
             """    
-
     
     process = Popen(command, shell=True,stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate()
     
     print("Command output:")
     print(stdout.decode())
-
+    
     if stderr:
         print("Command error:")
         print(stderr.decode())          
+    

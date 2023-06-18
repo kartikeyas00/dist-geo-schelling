@@ -1,4 +1,5 @@
 import os
+import itertools
 from subprocess import Popen, PIPE
 import yaml
 
@@ -6,37 +7,45 @@ import yaml
 ###############################################################################
 ## Various Pre Defined Settings
 ###############################################################################
-with open("/home/ksharma2/dist-geo-schelling/configs/config_single_all_spacings.yml") as f:
+with open("/home/ksharma2/dist-geo-schelling/configs/config_dist_partitions_with_processes.yml") as f:
     config = yaml.safe_load(f)
     python_file = config["python_file"]
     shapefile = config["shapefile"]
     data_path = config["data_path"]
     empty_ratio = config["empty_ratio"] 
-    demography_ratio = config["demography_ratio"]  # According to 2022 california census there are 71.1% of whites in the state
-    similarity_threshold = config["similarity_threshold"]# I just made it up
+    demography_ratio = config["demography_ratio"] # According to 2022 california census there are 71.1% of whites in the state
+    similarity_threshold = config["similarity_threshold"] # I just made it up
     number_of_iterations = config["number_of_iterations"]
     python_path = config["python_path"] 
+    #number_of_processes = config["number_of_processes"]
+    spacing = 0.004
 ###############################################################################
 
-spacings = [
-    0.1, 
-    0.09, 
-    0.08, 
-    0.07, 
-    0.06, 
-    0.05,
-    0.04, 
-    0.03, 
-    0.02, 
-    0.01,
-    0.009,
-    0.008,
-    0.007,
-    0.006,
-    0.005,
-    0.004
+partitions = [
+    ["geohash", "morton"],
+   
+    ["col", "morton"],
     ]
 
+processes = [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24
+]
 ### Do some directory manipulation work
 
 def clear_directory(directory_path):
@@ -54,37 +63,46 @@ def create_directory(directory_path, delete=False):
     elif os.path.exists(directory_path) and delete:
         clear_directory(directory_path)
         
-for spacing in spacings:
-    create_directory(f"{data_path}/logs/{spacing}", delete=True)
-    create_directory(f"{data_path}/checkpoint/{spacing}", delete=True)
-    create_directory(f"{data_path}/plotting/{spacing}", delete=True)
+        
+for partition in partitions:
+    create_directory(f"{data_path}/logs/{partition[0]}", delete=False)
+    create_directory(f"{data_path}/checkpoint/{partition[0]}", delete=False)
+    create_directory(f"{data_path}/plotting/{partition[0]}", delete=False)
+    create_directory(f"{data_path}/logs/{partition[0]}/{partition[1]}", delete=False)
+    create_directory(f"{data_path}/checkpoint/{partition[0]}/{partition[1]}", delete=False)
+    create_directory(f"{data_path}/plotting/{partition[0]}/{partition[1]}", delete=False)
+    for process in processes:
+        create_directory(f"{data_path}/logs/{partition[0]}/{partition[1]}/{process}", delete=True)
+        create_directory(f"{data_path}/checkpoint/{partition[0]}/{partition[1]}/{process}", delete=True)
+        create_directory(f"{data_path}/plotting/{partition[0]}/{partition[1]}/{process}", delete=True)
 
+combinations = list(itertools.product(partitions, processes))
+combinations = [list(partition) + [process] for partition, process in combinations]
 
-
-
-
-
-
-for spacing in spacings:
+for comb in combinations:
 
     command = f"""
+                mpiexec -n {comb[2]}\
                 "{python_path}" "{python_file}"\
                 --shapefilepath "{shapefile}"\
                 --spacing {spacing}\
                 --empty_ratio {empty_ratio}\
                 --demographic_ratio {demography_ratio} \
                 --similarity_threshold {similarity_threshold}\
+                --number_of_processes {comb[2]} \
                 --number_of_iterations {number_of_iterations} \
+                --shape_file_partition "{comb[0]}" \
+                --populated_houses_partition "{comb[1]}"\
                 --data_path "{data_path}"
             """    
-
     
     process = Popen(command, shell=True,stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate()
     
     print("Command output:")
     print(stdout.decode())
-
+    
     if stderr:
         print("Command error:")
         print(stderr.decode())          
+    

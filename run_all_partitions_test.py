@@ -7,25 +7,25 @@ import yaml
 ###############################################################################
 ## Various Pre Defined Settings
 ###############################################################################
-with open("configs/config_dist_all_partitions.yml") as f:
+with open("/home/ksharma2/dist-geo-schelling/configs/config_dist_all_partitions.yml") as f:
     config = yaml.safe_load(f)
-    python_file = config["python_file"]#"/home/ksharma2/dist-geo-schelling/run_single.py"
-    shapefile = config["shapefile"]#"/home/ksharma2/dist-geo-schelling/shapefiles/CA/CA.shp"
-    data_path = config["data_path"]#"/home/ksharma2/jobs/results/dist-geo-schelling/single/"
-    empty_ratio = config["empty_ratio"] #0.1
-    demography_ratio = config["demography_ratio"] #0.71 # According to 2022 california census there are 71.1% of whites in the state
-    similarity_threshold = config["similarity_threshold"]#0.4 # I just made it up
-    number_of_iterations = config["number_of_iterations"]#100
-    python_path = config["python_path"] #"python"
+    python_file = config["python_file"]
+    shapefile = config["shapefile"]
+    data_path = config["data_path"]
+    empty_ratio = config["empty_ratio"] 
+    demography_ratio = config["demography_ratio"] # According to 2022 california census there are 71.1% of whites in the state
+    similarity_threshold = config["similarity_threshold"] # I just made it up
+    number_of_iterations = config["number_of_iterations"]
+    python_path = config["python_path"] 
     number_of_processes = config["number_of_processes"]
     spacing = config["spacing"]
 ###############################################################################
 
 partitions = [
-    #"row",
-    #"col",
-    #"hilbert",
-    #"morton",
+    "row",
+    "col",
+    "hilbert",
+    "morton",
     "geohash"
     ]
 
@@ -52,9 +52,9 @@ for partition in partitions:
     create_directory(f"{data_path}/checkpoint/{partition}", delete=False)
     create_directory(f"{data_path}/plotting/{partition}", delete=False)
     for partition_ in partitions:
-        create_directory(f"{data_path}/logs/{partition}/{partition_}", delete=True)
-        create_directory(f"{data_path}/checkpoint/{partition_}", delete=True)
-        create_directory(f"{data_path}/plotting/{partition}/{partition_}", delete=True)
+        create_directory(f"{data_path}/logs/{partition}/{partition_}/{spacing}", delete=True)
+        create_directory(f"{data_path}/checkpoint/{partition}/{partition_}/{spacing}", delete=True)
+        create_directory(f"{data_path}/plotting/{partition}/{partition_}/{spacing}", delete=True)
 
 partition_combinations = list(itertools.product(partitions,repeat=2))
 
