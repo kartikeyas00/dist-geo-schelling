@@ -124,8 +124,8 @@ if __name__ == "__main__":
                 empty_houses,
             )
         logger.info("Central: Agents moved.")
-        #if houses is not None:
-            #history_all_houses.append(houses.tolist())
+        if houses is not None:
+            history_all_houses.append(houses.tolist())
          
         # Scatter satisfied and empty agents data to all workers from the parent node
        
@@ -135,8 +135,8 @@ if __name__ == "__main__":
     
     # Save plotting data
     
-    #out_file = open(f"{plotting_data_storage_path}/history_gathered_all_houses.json", "w")
-    #json.dump(history_all_houses, out_file)
+    out_file = open(f"{plotting_data_storage_path}/history_gathered_all_houses.json", "w")
+    json.dump(history_all_houses, out_file)
     
     end_time = time.time()  # End time of the program
     

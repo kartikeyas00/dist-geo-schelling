@@ -78,7 +78,6 @@ def split_arrays(array, number_of_partitions):
 def move_distributed(unsatisfied_agents, empty_houses, number_of_partitions=4):
     satisfied_agents = []
 
-    
     concatenated_empty_house = np.concatenate(
     [
         np.hstack([empty_houses[i], np.full((empty_houses[i].shape[0], 1), i)])
@@ -98,8 +97,6 @@ def move_distributed(unsatisfied_agents, empty_houses, number_of_partitions=4):
     everything = np.concatenate((concatenated_unsatisfied_agents, concatenated_empty_house),axis=0)
     np.random.shuffle(everything[:, 0])
 
-    
-    
     satisfied_agents = everything[~np.isnan(everything[:,0])]
     concatenated_empty_house = everything[np.isnan(everything[:,0])]
     return split_arrays(satisfied_agents, number_of_partitions), split_arrays(concatenated_empty_house, number_of_partitions)
@@ -111,7 +108,6 @@ def move_centralized(unsatisfied_agents, empty_houses):
 
     everything = np.concatenate((unsatisfied_agents, empty_houses),axis=0)
     np.random.shuffle(everything[:, 0])
-    
     
     satisfied_agents = everything[~np.isnan(everything[:,0])]
     empty_houses = everything[np.isnan(everything[:,0])]

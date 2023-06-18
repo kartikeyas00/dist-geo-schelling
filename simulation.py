@@ -31,23 +31,11 @@ class Simulation:
                 ],
                 dtype=float,
             ).T
-        # print(f"Total Houses before-->{len(self.houses)}")
         if empty_houses is not None:
-            # print(f"Empty Houses --> {len(empty_houses)}")
             self.houses = np.vstack([self.houses, empty_houses])
 
         if satisfied_agents is not None:
-            # print(f"Satisfied Agents --> {len(satisfied_agents)}")
             self.houses = np.vstack([self.houses, satisfied_agents])
-        # print(f"Total Houses after-->{len(self.houses)}")
-        """
-        plt.axis("off")
-
-        for i in self.geometry:
-            plt.plot(i[:, 0], i[:, 1])
-
-        plt.scatter(self.houses[:, 1], self.houses[:, 2], c=self.houses[:, 0])
-        """
 
     def is_unsatisfied(self, agent, all_neighbours, race_list):
         neighbours_indices = all_neighbours[agent]
@@ -74,17 +62,11 @@ class Simulation:
                 axis=0,
             )
 
-            """
-            self.move(
-                agent_houses[index], race=race_list[index]
-            )
-            """
             return 1
         else:
             return 0
 
     def update(self):
-        # print(f"Number of houses before --> {len(self.houses)}")
         old_houses = self.houses[:, [1, 2]].copy()
         race = self.houses[:, 0].copy()
         all_neighbours = defaultdict(list)
@@ -102,42 +84,12 @@ class Simulation:
                 race,
                 old_houses,
             )
-        # print(f"Number of unsatisfied agents --> {len(self.unsatisfied_agents)}")
-        # for index in np.arange(len(self.unsatisfied_agents)):
-        # self.move(self.unsatisfied_agents[index], race=self.unsatisfied_agents[index][0])
-        """
-        plt.figure()
-        plt.axis('off')
-        plt.scatter(self.houses[:, 1],
-            self.houses[:, 2],
-            c= self.houses[:, 0])
-        for i in self.geometry:
-            plt.plot(i[:, 0], i[:, 1])
-        plt.show()
-        """
-        # print(f"Number of houses after --> {len(self.houses)}")
-        # if changes == 0:
-        #    break
-        # print("Number of Agents Moved ----> " + str(changes))
 
     def get_unsatisfied_and_empty_agents(self):
-        print(f"Number of houses before --> {len(self.houses)}")
         empty_houses = self.houses[np.isnan(self.houses[:, 0])]
         old_houses = self.houses.copy()
-        
-        
-        #np.save("/home/ksharma2/dist-geo-schelling/houses",self.houses)
-        #np.save("/home/ksharma2/dist-geo-schelling/unsatisfied_agents",self.unsatisfied_agents)
+    
         self.houses = np.delete(self.houses,self.unsatisfied_agents_index,axis=0)
         self.houses = self.houses[~np.isnan(self.houses[:, 0])]
-        print(f"Number of houses after --> {len(self.houses)}")
-        #self.houses = self.houses[
-        #    ~np.all(self.houses == self.unsatisfied_agents[:, None], axis=2).any(axis=0)
-        #]
-
-        # self.houses = self.houses[~np.isin(self.houses, self.unsatisfied_agents).all(axis=1)]
-
-        print(f"Number of empty houses --> {len(empty_houses)}")
-        print(f"Number of unsatisfied agents --> {len(self.unsatisfied_agents)}")
-        print(f"Number of houses after --> {len(self.houses)}")
+       
         return empty_houses, self.unsatisfied_agents, old_houses
